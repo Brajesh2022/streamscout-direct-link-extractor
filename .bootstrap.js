@@ -78,7 +78,9 @@ function updateWranglerJsonc() {
 
 function runSetupCommands() {
     const commands = [
-    "bun install jsdom"
+    "bun install jsdom",
+    "bun add cheerio",
+    "bun add -d @types/cheerio"
 ];
     
     if (commands.length === 0) {
