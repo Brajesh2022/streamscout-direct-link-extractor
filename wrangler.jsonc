@@ -4,7 +4,7 @@
  */
  {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "streamscout-dhkyck7iuwkqmw6f0-jp8",
+	"name": "gggghg",
 	"main": "worker/index.ts",
 	"compatibility_date": "2025-04-24",
 	"assets": {
