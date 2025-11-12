@@ -129,15 +129,15 @@ export function HomePage() {
     <>
       <main className="min-h-screen w-full bg-gray-950 text-white animated-gradient-bg">
         <ThemeToggle className="fixed top-4 right-4 z-50" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-16 md:py-24">
-            <div className="max-w-2xl mx-auto text-center">
-              <div className="flex justify-center mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                  <Link className="w-8 h-8 text-white" />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-12 sm:py-16 md:py-24">
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="flex justify-center mb-6 sm:mb-8">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                  <Link className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                 </div>
               </div>
-              <h1 className="text-4xl md:text-6xl font-bold font-display tracking-tight bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-display tracking-tight bg-gradient-to-br from-white to-gray-400 bg-clip-text text-transparent">
                 {displayTitle}
               </h1>
               <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10">
@@ -162,32 +162,32 @@ export function HomePage() {
               </div>
             </div>
 
-            <div className="mt-16 max-w-2xl mx-auto">
+            <div className="mt-12 sm:mt-16 max-w-2xl mx-auto">
               {!isProcessing && error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center animate-fade-in">
-                  <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-red-300">Extraction Failed</h3>
-                  <p className="text-gray-400 mt-2">{error}</p>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 sm:p-6 text-center animate-fade-in">
+                  <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-400 mx-auto mb-4" />
+                  <h3 className="text-lg sm:text-xl font-bold text-red-300">Extraction Failed</h3>
+                  <p className="text-gray-400 mt-2 text-sm sm:text-base">{error}</p>
                 </div>
               )}
               {!isProcessing && !error && downloadLinks.length > 0 && (
                 <div className="space-y-6 animate-fade-in-up">
                   {trustedLinks.length > 0 && (
                     <div className="space-y-4">
-                      <h3 className="flex items-center gap-2 font-semibold text-lg"><Sparkles className="text-yellow-400" /> Recommended Servers</h3>
+                      <h3 className="flex items-center gap-2 font-semibold text-base sm:text-lg"><Sparkles className="text-yellow-400" /> Recommended Servers</h3>
                       {trustedLinks.map((link, index) => (
                         <div key={index} className="animate-slide-in-left" style={{ animationDelay: `${index * 100}ms` }}>
                           <Button variant="ghost" onClick={() => handleLinkClick(link)} className="w-full h-auto p-0 rounded-xl bg-gray-900/90 backdrop-blur-xl border border-white/10 hover:bg-gray-800/90">
                             <div className="p-4 flex items-center justify-between gap-4 w-full">
                               <div className="flex items-center gap-3 flex-1 min-w-0">
                                 <Star className="h-5 w-5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-                                <p className="font-semibold truncate text-left">{link.label}</p>
+                                <p className="font-semibold truncate text-left text-sm sm:text-base">{link.label}</p>
                               </div>
                               <ChevronRight className="h-5 w-5 text-gray-400" />
                             </div>
                           </Button>
                           {selectedLink?.url === link.url && !isZipFile && (
-                            <div className="mt-2 grid grid-cols-2 gap-2 animate-slide-down">
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 animate-slide-down">
                               <Button onClick={() => handleWatchOnline(link.url)} className="bg-emerald-600 hover:bg-emerald-500"><Play className="h-4 w-4 mr-2" />Watch</Button>
                               <Button onClick={() => handleDownload(link.url)} className="bg-sky-600 hover:bg-sky-500"><Download className="h-4 w-4 mr-2" />Download</Button>
                             </div>
@@ -210,12 +210,12 @@ export function HomePage() {
                             <div key={index} className="animate-slide-in-left" style={{ animationDelay: `${index * 50}ms` }}>
                               <Button variant="ghost" onClick={() => handleLinkClick(link)} className="w-full h-auto p-0 rounded-xl bg-gray-900/90 backdrop-blur-xl border border-white/10 hover:bg-gray-800/90">
                                 <div className="p-4 flex items-center justify-between gap-4 w-full">
-                                  <p className="font-semibold truncate text-left">{link.label}</p>
+                                  <p className="font-semibold truncate text-left text-sm sm:text-base">{link.label}</p>
                                   <ChevronRight className="h-5 w-5 text-gray-400" />
                                 </div>
                               </Button>
                               {selectedLink?.url === link.url && !isZipFile && (
-                                <div className="mt-2 grid grid-cols-2 gap-2 animate-slide-down">
+                                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 animate-slide-down">
                                   <Button onClick={() => handleWatchOnline(link.url)} className="bg-emerald-600 hover:bg-emerald-500"><Play className="h-4 w-4 mr-2" />Watch</Button>
                                   <Button onClick={() => handleDownload(link.url)} className="bg-sky-600 hover:bg-sky-500"><Download className="h-4 w-4 mr-2" />Download</Button>
                                 </div>
@@ -235,7 +235,7 @@ export function HomePage() {
               </button>
               {showLogs && (
                 <div className="mt-4 bg-black/40 backdrop-blur-xl border border-white/5 rounded-xl p-4 text-left animate-fade-in">
-                  <div ref={statusRef} className="bg-black/60 rounded-lg h-48 overflow-y-auto font-mono text-xs text-gray-400 p-3 custom-scrollbar">
+                  <div ref={statusRef} className="bg-black/60 rounded-lg h-40 sm:h-48 overflow-y-auto font-mono text-xs text-gray-400 p-3 custom-scrollbar">
                     {logs.map((log, index) => (
                       <p key={index} className={log.type === "error" ? "text-red-400" : log.type === "success" ? "text-green-400" : ""}>
                         [{log.timestamp.toLocaleTimeString()}] {log.message}
@@ -247,24 +247,24 @@ export function HomePage() {
             </div>
           </div>
         </div>
-        <footer className="text-center py-8 text-sm text-muted-foreground">
+        <footer className="text-center py-6 sm:py-8 text-sm text-muted-foreground">
           Built with ❤️
         </footer>
       </main>
       <Toaster richColors theme="dark" />
       {/* Streaming Popup */}
       <Dialog open={showStreamingPopup} onOpenChange={setShowStreamingPopup}>
-        <DialogContent className="max-w-4xl w-full bg-black/95 backdrop-blur-2xl border border-white/10 p-0 gap-0">
-          <button onClick={() => setShowStreamingPopup(false)} className="absolute top-4 right-4 z-50 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-red-500/20 border border-white/10">
+        <DialogContent className="w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-4xl bg-black/95 backdrop-blur-2xl border border-white/10 p-0 gap-0">
+          <button onClick={() => setShowStreamingPopup(false)} className="absolute top-3 right-3 sm:top-4 sm:right-4 z-50 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-red-500/20 border border-white/10">
             <X className="h-4 w-4 text-white/70" />
           </button>
-          <div className="px-6 sm:px-8 pt-8 pb-6 text-center">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+          <div className="px-6 sm:px-8 pt-6 pb-5 sm:pt-8 sm:pb-6 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
               Choose Your Player
             </h2>
-            <p className="text-gray-400">Select the best option for your device: <span className="font-bold">{detectedOS}</span></p>
+            <p className="text-gray-400 text-sm sm:text-base">Select the best option for your device: <span className="font-bold">{detectedOS}</span></p>
           </div>
-          <div className="px-6 sm:px-8 pb-8 space-y-4">
+          <div className="px-4 sm:px-8 pb-6 sm:pb-8 space-y-3 sm:space-y-4">
             {detectedOS === 'iOS' && (
               <a href={`vlc://stream?url=${encodeURIComponent(streamingUrl)}`} className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white font-medium">
                 <Play className="h-4 w-4" /> Open in VLC
