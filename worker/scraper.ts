@@ -1,13 +1,16 @@
 import { JSDOM } from 'jsdom';
-
-
-
-interface HTMLAnchorElement {
-  id?: string | number;
-
-  [key: string]: unknown;
-}interface HTMLAnchorElement {id?: string | number;[key: string]: unknown;}export interface DownloadLink {url: string;label: string;isTrusted: boolean;}const trustedPatterns = [{ name: "Pub-Dev", regex: /pub-.*?\.dev/i }, { name: "FSL Server", regex: /fsl\.gigabytes\.click/i }];
-
+import type { DownloadLink } from '@shared/types';
+// JSDOM provides its own DOM interfaces, but for type-checking in this context,
+// we can define a minimal interface for the elements we're working with.
+interface CustomHTMLAnchorElement extends Element {
+  href: string;
+  textContent: string | null;
+  getAttribute(name: string): string | null;
+}
+const trustedPatterns = [
+  { name: "Pub-Dev", regex: /pub-.*?\.dev/i },
+  { name: "FSL Server", regex: /fsl\.gigabytes\.click/i }
+];
 function transformPixeldrainUrl(url: string): string {
   try {
     const urlObj = new URL(url);
@@ -16,7 +19,7 @@ function transformPixeldrainUrl(url: string): string {
       return `https://pixeldrain.com/api/file/${fileId}`;
     }
   } catch (e) {
-
+    // Ignore invalid URLs
   }
   return url;
 }
@@ -24,13 +27,11 @@ function replaceBrandingText(text: string): string {
   return text.replace(/N-Cloud|Hub-Cloud|V-Cloud/gi, 'StreamScout');
 }
 export async function processUrl(url: string): Promise<DownloadLink[]> {
-
   const response1 = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
   });
   if (!response1.ok) throw new Error(`Failed to fetch initial URL (status: ${response1.status})`);
   const html1 = await response1.text();
-
   let finalUrl: string | null = null;
   const jsVarRegex = /var\s+url\s*=\s*'(.*?)'/;
   const jsMatch = html1.match(jsVarRegex);
@@ -38,7 +39,7 @@ export async function processUrl(url: string): Promise<DownloadLink[]> {
     finalUrl = jsMatch[1];
   } else {
     const dom1 = new JSDOM(html1);
-    const linkElement = dom1.window.document.querySelector('a[href*="token="]') as HTMLAnchorElement | null;
+    const linkElement = dom1.window.document.querySelector('a[href*="token="]') as CustomHTMLAnchorElement | null;
     if (linkElement) {
       let hrefValue = linkElement.getAttribute('href') || '';
       if (hrefValue.startsWith('/')) {
@@ -52,18 +53,16 @@ export async function processUrl(url: string): Promise<DownloadLink[]> {
   if (!finalUrl) {
     throw new Error("Could not find the tokenized URL");
   }
-
   const response2 = await fetch(finalUrl, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
   });
   if (!response2.ok) throw new Error(`Failed to fetch download page (status: ${response2.status})`);
   const html2 = await response2.text();
-
   const dom2 = new JSDOM(html2);
   const allLinks = Array.from(dom2.window.document.querySelectorAll("a.btn"));
   const links: DownloadLink[] = [];
   allLinks.forEach((link) => {
-    const linkElement = link as HTMLAnchorElement;
+    const linkElement = link as CustomHTMLAnchorElement;
     const linkText = linkElement.textContent?.trim() || "";
     if (linkText.toLowerCase().includes("telegram")) return;
     const extractedUrl = transformPixeldrainUrl(linkElement.href);
@@ -79,9 +78,9 @@ export async function processUrl(url: string): Promise<DownloadLink[]> {
   if (links.length === 0) {
     throw new Error("No valid download links found after filtering");
   }
-
+  // Sort with trusted links first
   return [
-  ...links.filter((l) => l.isTrusted),
-  ...links.filter((l) => !l.isTrusted)];
-
+    ...links.filter((l) => l.isTrusted),
+    ...links.filter((l) => !l.isTrusted)
+  ];
 }
