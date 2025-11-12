@@ -1,12 +1,5 @@
-import { JSDOM } from 'jsdom';
+import { load } from 'cheerio';
 import type { DownloadLink } from '@shared/types';
-// JSDOM provides its own DOM interfaces, but for type-checking in this context,
-// we can define a minimal interface for the elements we're working with.
-interface CustomHTMLAnchorElement extends Element {
-  href: string;
-  textContent: string | null;
-  getAttribute(name: string): string | null;
-}
 const trustedPatterns = [
   { name: "Pub-Dev", regex: /pub-.*?\.dev/i },
   { name: "FSL Server", regex: /fsl\.gigabytes\.click/i }
@@ -38,10 +31,10 @@ export async function processUrl(url: string): Promise<DownloadLink[]> {
   if (jsMatch && jsMatch[1]) {
     finalUrl = jsMatch[1];
   } else {
-    const dom1 = new JSDOM(html1);
-    const linkElement = dom1.window.document.querySelector('a[href*="token="]') as CustomHTMLAnchorElement | null;
-    if (linkElement) {
-      let hrefValue = linkElement.getAttribute('href') || '';
+    const $1 = load(html1);
+    const linkElement = $1('a[href*="token="]').first();
+    if (linkElement.length > 0) {
+      let hrefValue = linkElement.attr('href') || '';
       if (hrefValue.startsWith('/')) {
         const baseUrl = new URL(url);
         finalUrl = `${baseUrl.protocol}//${baseUrl.hostname}${hrefValue}`;
@@ -58,14 +51,14 @@ export async function processUrl(url: string): Promise<DownloadLink[]> {
   });
   if (!response2.ok) throw new Error(`Failed to fetch download page (status: ${response2.status})`);
   const html2 = await response2.text();
-  const dom2 = new JSDOM(html2);
-  const allLinks = Array.from(dom2.window.document.querySelectorAll("a.btn"));
+  const $2 = load(html2);
+  const allLinks = $2("a.btn");
   const links: DownloadLink[] = [];
-  allLinks.forEach((link) => {
-    const linkElement = link as CustomHTMLAnchorElement;
-    const linkText = linkElement.textContent?.trim() || "";
+  allLinks.each((_, link) => {
+    const linkElement = $2(link);
+    const linkText = linkElement.text()?.trim() || "";
     if (linkText.toLowerCase().includes("telegram")) return;
-    const extractedUrl = transformPixeldrainUrl(linkElement.href);
+    const extractedUrl = transformPixeldrainUrl(linkElement.attr('href') || '');
     const hostMatch = trustedPatterns.find((p) => p.regex.test(extractedUrl));
     const bracketMatch = linkText.match(/\[(.*?)\]/);
     const shortText = bracketMatch && bracketMatch[1] ? bracketMatch[1].trim() : linkText.replace(/\s+/g, " ");
