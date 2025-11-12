@@ -2,7 +2,7 @@
 
 A minimalist web application to extract direct download and streaming links from shared cloud storage URLs.
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Brajesh2022/streamscout-direct-link-extractor)
 
 ## Description
 
@@ -99,7 +99,7 @@ This project is configured for easy deployment to Cloudflare Pages and Workers.
 
 Alternatively, you can connect your GitHub repository to Cloudflare Pages for automatic deployments on every push.
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Brajesh2022/streamscout-direct-link-extractor)
 
 ## Project Structure
 
