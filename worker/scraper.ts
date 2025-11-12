@@ -1,8 +1,12 @@
-import { load } from 'cheerio';
-import type { DownloadLink, ProcessUrlResponse } from '@shared/types';
+import { JSDOM } from 'jsdom';
+export interface DownloadLink {
+  url: string;
+  label: string;
+  isTrusted: boolean;
+}
 const trustedPatterns = [
   { name: "Pub-Dev", regex: /pub-.*?\.dev/i },
-  { name: "FSL Server", regex: /fsl\.gigabytes\.click/i }
+  { name: "FSL Server", regex: /fsl\.gigabytes\.click/i },
 ];
 function transformPixeldrainUrl(url: string): string {
   try {
@@ -17,24 +21,26 @@ function transformPixeldrainUrl(url: string): string {
   return url;
 }
 function replaceBrandingText(text: string): string {
-  return text.replace(/N-Cloud|Hub-Cloud|V-Cloud/gi, 'StreamScout');
+    return text.replace(/N-Cloud|Hub-Cloud|V-Cloud/gi, 'StreamScout');
 }
-export async function processUrl(url: string): Promise<ProcessUrlResponse> {
+export async function processUrl(url: string): Promise<DownloadLink[]> {
+  // Step 1: Fetch the initial page
   const response1 = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
   });
   if (!response1.ok) throw new Error(`Failed to fetch initial URL (status: ${response1.status})`);
   const html1 = await response1.text();
+  // Step 2: Extract the tokenized final URL
   let finalUrl: string | null = null;
   const jsVarRegex = /var\s+url\s*=\s*'(.*?)'/;
   const jsMatch = html1.match(jsVarRegex);
   if (jsMatch && jsMatch[1]) {
     finalUrl = jsMatch[1];
   } else {
-    const $1 = load(html1);
-    const linkElement = $1('a[href*="token="]').first();
-    if (linkElement.length > 0) {
-      let hrefValue = linkElement.attr('href') || '';
+    const dom1 = new JSDOM(html1);
+    const linkElement = dom1.window.document.querySelector('a[href*="token="]') as HTMLAnchorElement | null;
+    if (linkElement) {
+      let hrefValue = linkElement.getAttribute('href') || '';
       if (hrefValue.startsWith('/')) {
         const baseUrl = new URL(url);
         finalUrl = `${baseUrl.protocol}//${baseUrl.hostname}${hrefValue}`;
@@ -46,40 +52,36 @@ export async function processUrl(url: string): Promise<ProcessUrlResponse> {
   if (!finalUrl) {
     throw new Error("Could not find the tokenized URL");
   }
+  // Step 3: Fetch the final page with download links
   const response2 = await fetch(finalUrl, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
   });
   if (!response2.ok) throw new Error(`Failed to fetch download page (status: ${response2.status})`);
   const html2 = await response2.text();
-  const $2 = load(html2);
-  const pageTitle = $2('title').text() || '';
-  const isZipFile = pageTitle.toLowerCase().endsWith('.zip');
-  const allLinks = $2("a.btn");
+  // Step 4: Parse HTML and extract download links
+  const dom2 = new JSDOM(html2);
+  const allLinks = Array.from(dom2.window.document.querySelectorAll("a.btn"));
   const links: DownloadLink[] = [];
-  allLinks.each((_, link) => {
-    const linkElement = $2(link);
-    const linkText = linkElement.text()?.trim() || "";
+  allLinks.forEach((link) => {
+    const linkElement = link as HTMLAnchorElement;
+    const linkText = linkElement.textContent?.trim() || "";
     if (linkText.toLowerCase().includes("telegram")) return;
-    const extractedUrl = transformPixeldrainUrl(linkElement.attr('href') || '');
+    const extractedUrl = transformPixeldrainUrl(linkElement.href);
     const hostMatch = trustedPatterns.find((p) => p.regex.test(extractedUrl));
     const bracketMatch = linkText.match(/\[(.*?)\]/);
     const shortText = bracketMatch && bracketMatch[1] ? bracketMatch[1].trim() : linkText.replace(/\s+/g, " ");
     links.push({
       url: extractedUrl,
       label: replaceBrandingText(shortText),
-      isTrusted: !!hostMatch
+      isTrusted: !!hostMatch,
     });
   });
   if (links.length === 0) {
     throw new Error("No valid download links found after filtering");
   }
-  const sortedLinks = [
+  // Sort: trusted first
+  return [
     ...links.filter((l) => l.isTrusted),
-    ...links.filter((l) => !l.isTrusted)
+    ...links.filter((l) => !l.isTrusted),
   ];
-  return {
-    links: sortedLinks,
-    pageTitle,
-    isZipFile,
-  };
 }
