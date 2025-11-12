@@ -106,6 +106,9 @@ export default ({ mode }: { mode: string }) => {
     },
     server: {
       allowedHosts: true,
+      fs: {
+        allow: ['.']
+      }
     },
     resolve: {
       alias: {

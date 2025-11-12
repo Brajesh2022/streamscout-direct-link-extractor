@@ -1,22 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { api } from '@/lib/api-client';
 import type { DownloadLink, ProcessUrlResponse } from '@shared/types';
 import { Link, Loader2, AlertCircle, Sparkles, Download, Play, X, Star, CheckCircle2, ChevronRight } from 'lucide-react';
+
 interface ProcessLog {
   message: string;
   type: "info" | "success" | "error";
   timestamp: Date;
 }
+
 export function HomePage() {
-  const [url, setUrl] = useState('');
   const [logs, setLogs] = useState<ProcessLog[]>([]);
   const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(true); // Start with processing true
   const [error, setError] = useState<string | null>(null);
   const [isZipFile, setIsZipFile] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
@@ -30,6 +30,7 @@ export function HomePage() {
   const [selectedLink, setSelectedLink] = useState<DownloadLink | null>(null);
   const [displayTitle, setDisplayTitle] = useState("StreamScout");
   const statusRef = useRef<HTMLDivElement>(null);
+
   const addLog = (message: string, type: "info" | "success" | "error" = "info") => {
     setLogs((prev) => [...prev, { message, type, timestamp: new Date() }]);
     setTimeout(() => {
@@ -38,24 +39,8 @@ export function HomePage() {
       }
     }, 100);
   };
-  const resetState = () => {
-    setUrl('');
-    setLogs([]);
-    setDownloadLinks([]);
-    setIsProcessing(false);
-    setError(null);
-    setIsZipFile(false);
-    setShowLogs(false);
-    setShowMoreOptions(false);
-    setSelectedLink(null);
-    setDisplayTitle("StreamScout");
-  };
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url.trim()) {
-      toast.error("Please enter a URL.");
-      return;
-    }
+
+  const processUrl = async (url: string) => {
     setIsProcessing(true);
     setError(null);
     setDownloadLinks([]);
@@ -82,6 +67,19 @@ export function HomePage() {
       setIsProcessing(false);
     }
   };
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlToProcess = searchParams.get('url');
+    if (urlToProcess) {
+      processUrl(urlToProcess);
+    } else {
+      setError("No URL provided. Please add `?url=...` to the address bar.");
+      setIsProcessing(false);
+    }
+  }, []);
+
+
   const handleLinkClick = (link: DownloadLink) => {
     if (isZipFile) {
       window.open(link.url, "_blank");
@@ -89,15 +87,18 @@ export function HomePage() {
       setSelectedLink(link.url === selectedLink?.url ? null : link);
     }
   };
+
   const handleWatchOnline = (url: string) => {
     setStreamingUrl(url);
     setShowStreamingPopup(true);
     setSelectedLink(null);
   };
+
   const handleDownload = (url: string) => {
     window.open(url, "_blank");
     setSelectedLink(null);
   };
+
   useEffect(() => {
     if (showStreamingPopup && !detectedOS) {
       const userAgent = window.navigator.userAgent;
@@ -108,6 +109,7 @@ export function HomePage() {
       else setDetectedOS('Other');
     }
   }, [showStreamingPopup, detectedOS]);
+
   const downloadM3u = (url: string) => {
     const m3uContent = `#EXTM3U\n#EXTINF:-1,Stream\n${url}`;
     const blob = new Blob([m3uContent], { type: 'audio/x-mpegurl' });
@@ -119,8 +121,10 @@ export function HomePage() {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);
   };
+
   const trustedLinks = downloadLinks.filter((l) => l.isTrusted);
   const otherLinks = downloadLinks.filter((l) => !l.isTrusted);
+
   return (
     <>
       <main className="min-h-screen w-full bg-gray-950 text-white animated-gradient-bg">
@@ -157,28 +161,13 @@ export function HomePage() {
                 )}
               </div>
             </div>
-            <div className="mt-12 max-w-xl mx-auto">
-              <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-                <Input
-                  type="url"
-                  placeholder="https://example.com/..."
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  className="h-12 text-base bg-white/5 border-white/10 placeholder:text-gray-500"
-                  disabled={isProcessing}
-                />
-                <Button type="submit" size="lg" className="h-12 w-36 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" disabled={isProcessing}>
-                  {isProcessing ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Process'}
-                </Button>
-              </form>
-            </div>
+
             <div className="mt-16 max-w-2xl mx-auto">
               {!isProcessing && error && (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 text-center animate-fade-in">
                   <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
                   <h3 className="text-xl font-bold text-red-300">Extraction Failed</h3>
                   <p className="text-gray-400 mt-2">{error}</p>
-                  <Button variant="destructive" className="mt-4" onClick={resetState}>Try Again</Button>
                 </div>
               )}
               {!isProcessing && !error && downloadLinks.length > 0 && (
@@ -259,7 +248,7 @@ export function HomePage() {
           </div>
         </div>
         <footer className="text-center py-8 text-sm text-muted-foreground">
-          Built with ❤️ at Cloudflare
+          Built with ❤️
         </footer>
       </main>
       <Toaster richColors theme="dark" />
