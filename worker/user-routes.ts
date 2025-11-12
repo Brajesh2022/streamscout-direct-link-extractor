@@ -15,8 +15,8 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
       } catch (e) {
         return bad(c, 'Invalid URL format');
       }
-      const links = await processUrl(url);
-      return ok(c, links);
+      const result = await processUrl(url);
+      return ok(c, result);
     } catch (error: unknown) {
       console.error('Processing failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

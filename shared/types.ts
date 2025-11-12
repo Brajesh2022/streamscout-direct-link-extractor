@@ -9,10 +9,11 @@ export interface DownloadLink {
   label: string;
   isTrusted: boolean;
 }
-export interface ProcessUrlRequest {
-  url: string;
+export interface ProcessUrlResponse {
+  links: DownloadLink[];
+  pageTitle: string;
+  isZipFile: boolean;
 }
-export type ProcessUrlResponse = DownloadLink[];
 // Minimal real-world chat example types (shared by frontend and worker)
 export interface User {
   id: string;

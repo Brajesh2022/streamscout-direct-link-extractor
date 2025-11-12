@@ -1,5 +1,5 @@
 import { load } from 'cheerio';
-import type { DownloadLink } from '@shared/types';
+import type { DownloadLink, ProcessUrlResponse } from '@shared/types';
 const trustedPatterns = [
   { name: "Pub-Dev", regex: /pub-.*?\.dev/i },
   { name: "FSL Server", regex: /fsl\.gigabytes\.click/i }
@@ -19,7 +19,7 @@ function transformPixeldrainUrl(url: string): string {
 function replaceBrandingText(text: string): string {
   return text.replace(/N-Cloud|Hub-Cloud|V-Cloud/gi, 'StreamScout');
 }
-export async function processUrl(url: string): Promise<DownloadLink[]> {
+export async function processUrl(url: string): Promise<ProcessUrlResponse> {
   const response1 = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
   });
@@ -52,6 +52,8 @@ export async function processUrl(url: string): Promise<DownloadLink[]> {
   if (!response2.ok) throw new Error(`Failed to fetch download page (status: ${response2.status})`);
   const html2 = await response2.text();
   const $2 = load(html2);
+  const pageTitle = $2('title').text() || '';
+  const isZipFile = pageTitle.toLowerCase().endsWith('.zip');
   const allLinks = $2("a.btn");
   const links: DownloadLink[] = [];
   allLinks.each((_, link) => {
@@ -71,9 +73,13 @@ export async function processUrl(url: string): Promise<DownloadLink[]> {
   if (links.length === 0) {
     throw new Error("No valid download links found after filtering");
   }
-  // Sort with trusted links first
-  return [
+  const sortedLinks = [
     ...links.filter((l) => l.isTrusted),
     ...links.filter((l) => !l.isTrusted)
   ];
+  return {
+    links: sortedLinks,
+    pageTitle,
+    isZipFile,
+  };
 }
